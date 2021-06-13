@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_101/repositories/films_repository..dart';
 import 'package:riverpod_101/screens/directors/directors_screen.dart';
 import 'package:riverpod_101/screens/films/films_screen.dart';
 
@@ -29,7 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Riverpod 101")),
+      appBar: AppBar(
+        title: Text("Riverpod 101"),
+        actions: [IconButton(onPressed: () => context.refresh(filmsProvider), icon: Icon(Icons.refresh))],
+      ),
       body: _screens[_index],
       bottomNavigationBar: BottomNavigationBar(
         onTap: (index) => setState(() => _index = index),

@@ -1,48 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_101/models/people.dart';
 import 'package:riverpod_101/repositories/people_repository..dart';
 import 'package:riverpod_101/screens/film/people_card.dart';
 
-class PeopleSection extends StatefulWidget {
+final _filteredPeopleProvider = FutureProvider.family<List<People>, List<String>>((ref, ids) async {
+  final people = await ref.watch(peopleProvider.future);
+
+  if (ids.length == 1 && ids.first == "people") return [];
+
+  return people.where((person) => ids.contains(person.id)).toList();
+});
+
+class PeopleSection extends ConsumerWidget {
   final List<String> peopleIds;
 
   const PeopleSection({Key? key, required this.peopleIds}) : super(key: key);
 
   @override
-  _PeopleSectionState createState() => _PeopleSectionState();
-}
+  Widget build(BuildContext context, ScopedReader watch) {
+    final filteredPeople = watch(_filteredPeopleProvider(peopleIds));
 
-class _PeopleSectionState extends State<PeopleSection> {
-  final PeopleRepository _peopleRepository = PeopleRepository();
-  late final Future<List<People>> peopleCall = _peopleRepository.fetchPeople();
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: peopleCall,
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final people = snapshot.data as List<People>;
-          final filteredPeople = _filterPeople(people);
-
-          return Expanded(
-            child: ListView.builder(
-              itemCount: filteredPeople.length,
-              itemBuilder: (context, index) {
-                return PeopleCard(people: filteredPeople[index]);
-              },
-            ),
-          );
-        }
-
-        return Center(child: CircularProgressIndicator());
-      },
+    return filteredPeople.when(
+      data: (filteredPeople) => _buildSuccess(filteredPeople),
+      loading: () => _buildLoading(),
+      error: (error, stack) => _buildError(),
     );
   }
 
-  List<People> _filterPeople(List<People> people) {
-    if (widget.peopleIds.length == 1 && widget.peopleIds.first == "people") return [];
-
-    return people.where((person) => widget.peopleIds.contains(person.id)).toList();
+  Widget _buildSuccess(List<People> filteredPeople) {
+    return Expanded(
+      child: ListView.builder(
+        itemCount: filteredPeople.length,
+        itemBuilder: (context, index) {
+          return PeopleCard(people: filteredPeople[index]);
+        },
+      ),
+    );
   }
+
+  Widget _buildError() => Center(child: Text("Oooops! Something bad is happening..."));
+
+  Widget _buildLoading() => Center(child: CircularProgressIndicator());
 }

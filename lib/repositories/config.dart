@@ -1,7 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final dioConfiguration = BaseOptions(
-  baseUrl: '',
-);
+final baseUrlProvider = StateProvider((ref) => 'https://ghibliapi.herokuapp.com/');
 
-final dio = Dio(dioConfiguration);
+final dioConfigurationProvider = Provider((ref) => BaseOptions(baseUrl: ref.watch(baseUrlProvider).state));
+
+final dioProvider = Provider((ref) => Dio(ref.watch(dioConfigurationProvider)));
